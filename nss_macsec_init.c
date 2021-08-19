@@ -48,6 +48,10 @@
 #define NSS_MACSEC_REG_LEN		0x00200000
 #define MACSEC_DEVICE_NUM 3
 
+#define MDM_LE_NTN3_MDIO_BUS_NAME     "tc956xmac"
+#define MDM_LE_NTN3_MDIO_BUS_ID       0x1
+#define MDM_LE_NTN3_MDIO_PHY_ID       0x1c
+
 static struct sock *sdk_nl_sk = NULL;
 
 static bool phy_driver_flag[MACSEC_DEVICE_NUM] = {FALSE, FALSE, FALSE};
@@ -308,6 +312,39 @@ static void nss_macsec_netlink_fini(void)
 }
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
+static int nss_macsec_dt_qca808x_default(uint32_t dev_id)
+{
+    struct phy_device *phydev;
+    struct device *miidev;
+    char busid[MII_BUS_ID_SIZE];
+    char phy_id_fmt[MII_BUS_ID_SIZE + 3];
+
+    snprintf(busid, MII_BUS_ID_SIZE, "%s-%x", MDM_LE_NTN3_MDIO_BUS_NAME, MDM_LE_NTN3_MDIO_BUS_ID);
+    snprintf(phy_id_fmt, MII_BUS_ID_SIZE + 3, "%s:%02x", busid, MDM_LE_NTN3_MDIO_PHY_ID);
+    miidev = bus_find_device_by_name(&mdio_bus_type, NULL, phy_id_fmt);
+    if (miidev) {
+        printk("mii bus[%s] is ready on MDM\n", phy_id_fmt);
+    } else {
+        printk("cannot get mii bus[%s] on MDM\n", phy_id_fmt);
+        return 1;
+    }
+
+    phydev  = to_phy_device(miidev);
+    nss_macsec_miibus[dev_id] = phydev->mdio.bus;
+    if (!try_module_get(nss_macsec_miibus[dev_id]->owner)) {
+        printk("cannot get mii bus module reference\n");
+        return 1;
+    }
+    printk("mdio read phy:%d reg:1=0x%04x\n", phydev->mdio.addr, mdiobus_read(nss_macsec_miibus[dev_id], phydev->mdio.addr, 1));
+
+    nss_macsec_secy_info_set(dev_id, phydev->mdio.addr);
+    nss_macsec_secy_driver_init(dev_id);
+    phy_driver_flag[dev_id] = TRUE;
+    secy_phy_flag = TRUE;
+
+    return 0;
+}
+
 static int nss_macsec_dt_init(uint32_t dev_id)
 {
 	int ret = 0;
@@ -323,11 +360,17 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 	snprintf(dev_name, sizeof(dev_name), "nss-macsec%d", dev_id);
 
 	nss_macsec_node = of_find_node_by_name(NULL, dev_name);
-	if (!nss_macsec_node) {
+	if (nss_macsec_node) {
+		printk(KERN_INFO "%s DT exist!\n", dev_name);
+	}
+	else {
+		if(0 == dev_id){
+			printk("Set nss-macsec%d default.\n", dev_id);
+			return nss_macsec_dt_qca808x_default(dev_id);
+		}
 		printk(KERN_ERR "cannot find nss-macsec%d node\n", dev_id);
 		return -ENODEV;
 	}
-	printk(KERN_INFO "%s DT exist!\n", dev_name);
 
 	nss_macsec_mdiobus_init(nss_macsec_node, dev_id);
 

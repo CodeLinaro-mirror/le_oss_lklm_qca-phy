@@ -16,6 +16,12 @@
 #include <sys_base.h>
 #include "cli_lib.h"
 
+#ifdef USE_GLIB
+#include <glib.h>
+#define strlcpy g_strlcpy
+#define strlcat g_strlcat
+#endif
+
 /******************************************************************************
  *
  * description:

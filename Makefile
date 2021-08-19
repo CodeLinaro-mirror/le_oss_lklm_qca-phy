@@ -17,11 +17,17 @@
 # Makefile for the NSS MACSEC driver
 ###################################################
 
+KERNEL_SRC ?= /lib/modules/$(shell uname -r)/build
+
+ifndef PRJ_PATH
+  PRJ_PATH=$(shell pwd)
+endif
+
 obj ?= .
 
-obj-m +=qca-nss-macsec.o
+obj-m +=qca-macsec.o
 
-qca-nss-macsec-objs +=	nss_macsec_init.o \
+qca-macsec-objs +=	nss_macsec_init.o \
 			dal/nss_macsec_register_api.o \
 			fal/nss_macsec_fal_api.o \
 			fal/nss_macsec_emac.o \
@@ -43,3 +49,13 @@ ccflags-y += -Wall -Werror
 ifeq ($(SoC), ipq806x)
 ccflags-y += -DMACSEC_IPQ806X_SUPPORT
 endif
+
+
+all:
+	$(MAKE) -C $(KERNEL_SRC) M=$(PRJ_PATH) modules
+
+modules_install:
+	$(MAKE) -C $(KERNEL_SRC) M=$(PRJ_PATH) modules_install
+
+clean:
+	$(MAKE) -C $(KERNEL_SRC) M=$(PRJ_PATH) clean
