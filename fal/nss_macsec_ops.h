@@ -655,6 +655,9 @@ g_error_t nss_macsec_secy_driver_cleanup(u32 secy_id);
 
 g_error_t secy_ops_unregister(enum secy_phy_type_t phy_type);
 
+int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev);
+
+
 #ifdef __cplusplus
 }
 #endif                          /* __cplusplus */
