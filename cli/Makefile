@@ -37,7 +37,7 @@ CLI_US_OBJ := shell_main.o \
 
 
 all : $(CLI_US_OBJ)
-	$(CC) $(LDFLAGS) -o cli   -lpthread  -L$(PRJ_PATH)/lib/fal -fPIC $^  -lfal
+	$(CC) -o cli -lpthread  -L$(PRJ_PATH)/lib/fal -fPIC $^ -lfal $(LDFLAGS)
 	#cp cli $(IMAGE_PATH)/clish
 	-rm -rf *.o  *.d
 

@@ -3920,7 +3920,7 @@ u32 nss_macsec_secy_id_get(u8 *dev_name, u32 *secy_id)
 	msg_header->cmd_type = SDK_FAL_CMD;
 	msg_header->sub_type = NSS_MACSEC_SECY_ID_GET_CMD;
 	msg_header->buf_len = sizeof(struct nss_macsec_secy_id_get_cmd);
-	strlcpy((char *)param->dev_name, (const char *)dev_name, 16);
+	memcpy((char *)param->dev_name, (const char *)dev_name, 16);
 
 	ret =
 	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
