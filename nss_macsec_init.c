@@ -342,7 +342,9 @@ static int nss_macsec_dt_napa_default(uint32_t dev_id)
 	phy_driver_flag[dev_id] = TRUE;
 	secy_phy_flag = TRUE;
 
+#if IS_ENABLED(CONFIG_MACSEC)
 	nss_macsec_offload_init(dev_id, phydev);
+#endif
 
 	return 0;
 }
