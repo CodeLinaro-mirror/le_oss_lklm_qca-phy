@@ -1047,6 +1047,7 @@ static const struct macsec_ops nss_macsec_mdo_ops = {
 
 int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev)
 {
+	struct net_device *ndev = phydev->attached_dev;
 
 	if (dev_id >= FAL_SECY_ID_NUM_MAX) {
 		osal_print("%s: error dev_id:%u\n", __func__, dev_id);
@@ -1068,6 +1069,8 @@ int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev)
 			}
 			memset(g_pdev_secy_cfg[dev_id], 0, sizeof(nss_macsec_secy_cfg_t));
 			phydev->macsec_ops = &nss_macsec_mdo_ops;
+			if(ndev)
+				ndev->features |= NETIF_F_HW_MACSEC;
 		}
 		break;
 		default:
