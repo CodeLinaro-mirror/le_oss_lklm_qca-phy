@@ -345,7 +345,7 @@ static int nss_macsec_dt_napa_default(uint32_t dev_id)
 #if IS_ENABLED(CONFIG_MACSEC)
 	nss_macsec_offload_init(dev_id, phydev);
 #endif
-
+	module_put(nss_macsec_miibus[dev_id]->owner);
 	return 0;
 }
 
@@ -437,12 +437,13 @@ static int nss_macsec_dt_init(uint32_t dev_id)
 static int nss_macsec_clean(void)
 {
 	uint32_t dev_id = 0;
-	int ret = 0, secy_id = 0;
+	int ret = 0;
 
 	if (secy_phy_flag == TRUE) {
-		for (secy_id = 0; secy_id < MACSEC_DEVICE_NUM; secy_id++) {
-			if (phy_driver_flag[secy_id] == TRUE)
-				nss_macsec_secy_driver_cleanup(secy_id);
+		for (dev_id = 0; dev_id < MACSEC_DEVICE_NUM; dev_id++) {
+			if (phy_driver_flag[dev_id] == TRUE)
+				nss_macsec_secy_driver_cleanup(dev_id);
+			nss_macsec_miibus[dev_id] = NULL;
 		}
 	} else {
 		if (macsec_notifier_register_status) {
