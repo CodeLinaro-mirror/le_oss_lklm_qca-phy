@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -1064,12 +1064,12 @@ int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev)
 		case PHY_NAPA:
 		case PHY_NAPA_1_1:
 		{
-			g_pdev_secy_cfg[dev_id] = kzalloc(sizeof(nss_macsec_secy_cfg_t), GFP_KERNEL);
+			g_pdev_secy_cfg[dev_id] = devm_kzalloc(&phydev->mdio.dev,
+							       sizeof(nss_macsec_secy_cfg_t), GFP_KERNEL);
 			if (NULL == g_pdev_secy_cfg[dev_id]){
-				osal_print("%s: kzalloc error\n", __func__);
+				osal_print("%s: devm_kzalloc error\n", __func__);
 				return ERROR_RESOURCE;
 			}
-			memset(g_pdev_secy_cfg[dev_id], 0, sizeof(nss_macsec_secy_cfg_t));
 			phydev->macsec_ops = &nss_macsec_mdo_ops;
 #if defined(NETIF_F_HW_MACSEC)
 			if(ndev)
