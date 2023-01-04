@@ -1,8 +1,11 @@
 /*
  * Copyright (c) 2018, The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -3635,7 +3638,7 @@ g_error_t qca808x_secy_tx_ctl_filt_set(u32 secy_id, u32 index,
 	struct secy_ctl_filt_t *secy_filt)
 {
 	u16 val = 0, val1 = 0;
-	g_error_t rv;
+	g_error_t rv = ERROR_OK;
 
 	if (index > 0)
 		return ERROR_PARAM;
@@ -3666,8 +3669,10 @@ g_error_t qca808x_secy_tx_ctl_filt_set(u32 secy_id, u32 index,
 			secy_id, index, secy_filt);
 		break;
 	default:
-		return ERROR_PARAM;
+		rv = ERROR_PARAM;
 	}
+	if (rv != ERROR_OK)
+		return rv;
 
 	SHR_RET_ON_ERR(PHY_REG_FIELD_READ(secy_id, PHY_MMD3,
 		MACSEC_SYS_CONFIG, SYS_CEPR_EN, &val1));
@@ -3857,7 +3862,7 @@ g_error_t qca808x_secy_rx_ctl_filt_set(u32 secy_id, u32 index,
 	struct secy_ctl_filt_t *secy_filt)
 {
 	bool val = 0;
-	g_error_t rv;
+	g_error_t rv = ERROR_OK;
 
 	if (index > 0)
 		return ERROR_PARAM;
@@ -3888,8 +3893,10 @@ g_error_t qca808x_secy_rx_ctl_filt_set(u32 secy_id, u32 index,
 			secy_id, index, secy_filt);
 		break;
 	default:
-		return ERROR_PARAM;
+		rv = ERROR_PARAM;
 	}
+	if (rv != ERROR_OK)
+		return rv;
 
 	if (secy_filt->bypass)
 		val = TRUE;
