@@ -172,12 +172,20 @@ static int qti_phy_get_features(struct phy_device *phydev)
 	if (err)
 		return err;
 
-	err = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_PMA_NG_EXTABLE);
+	err = phy_read_mmd(phydev, MDIO_MMD_AN, QCA808X_PHY_MMD7_CHIP_TYPE);
 	if (err < 0)
 		return err;
 
-	linkmode_mod_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT, phydev->supported,
-			 err & MDIO_PMA_NG_EXTABLE_2_5GBT);
+	/* QCA808X does not support 2.5G capability if the chip type is 1G from
+	 * the register MMD7 QCA808X_PHY_MMD7_CHIP_TYPE.
+	 */
+	if (!(QCA808X_PHY_CHIP_TYPE_1G & err)) {
+		err = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_PMA_NG_EXTABLE);
+		if (err < 0)
+			return err;
+		linkmode_mod_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT, phydev->supported,
+				 err & MDIO_PMA_NG_EXTABLE_2_5GBT);
+	}
 
 	return 0;
 }
@@ -565,20 +573,22 @@ static int qca808x_phy_config_init(struct phy_device *phydev)
 	if (ret)
 		return ret;
 
-	/* Config the fast retrain for the link 2500M */
-	ret = qca808x_phy_fast_retrain_config(phydev);
-	if (ret)
-		return ret;
+	if (linkmode_test_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT, phydev->supported)) {
+		/* Config the fast retrain for the link 2500M */
+		ret = qca808x_phy_fast_retrain_config(phydev);
+		if (ret)
+			return ret;
 
-	/* Configure lower ramdom seed to make phy linked as slave mode */
-	ret = qca808x_phy_ms_seed_set(phydev);
-	if (ret)
-		return ret;
+		/* Configure lower ramdom seed to make phy linked as slave mode */
+		ret = qca808x_phy_ms_seed_set(phydev);
+		if (ret)
+			return ret;
 
-	/* Enable seed */
-	ret = qca808x_phy_ms_seed_enable(phydev, true);
-	if (ret)
-		return ret;
+		/* Enable seed */
+		ret = qca808x_phy_ms_seed_enable(phydev, true);
+		if (ret)
+			return ret;
+	}
 
 	/* Configure adc threshold as 100mv for the link 10M */
 	return qti_phy_debug_reg_mask(phydev, QCA808X_PHY_DEBUG_ADC_THRESHOLD,
@@ -605,19 +615,21 @@ static int qca808x_phy_read_status(struct phy_device *phydev)
 	if (ret < 0)
 		return ret;
 
-	if (phydev->link) {
-		if (phydev->speed == SPEED_2500)
-			phydev->interface = PHY_INTERFACE_MODE_2500BASEX;
-		else
-			phydev->interface = PHY_INTERFACE_MODE_SGMII;
-	} else {
-		/* generate seed as a lower random value to make PHY linked as SLAVE
-		 * easily, except for master/slave configuration fault detected.
-		 * Be aware of the corner case where the link partner is also the
-		 * qca8081 PHY and the seed value is configured as the same value,
-		 * the link can't be up and no link change occurs.
-		 */
-		if (phydev->master_slave_state == MASTER_SLAVE_STATE_ERR) {
+	if (phydev->link && phydev->speed == SPEED_2500)
+		phydev->interface = PHY_INTERFACE_MODE_2500BASEX;
+	else
+		phydev->interface = PHY_INTERFACE_MODE_SMII;
+
+	/* generate seed as a lower random value to make PHY linked as SLAVE
+	 * easily, except for master/slave configuration fault detected.
+	 * Be aware of the corner case where the link partner is also the
+	 * qca8081 PHY and the seed value is configured as the same value,
+	 * the link can't be up and no link change occurs.
+	 */
+	if (linkmode_test_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT, phydev->supported) &&
+	    !phydev->link) {
+		int val = phy_read(phydev, MII_STAT1000);
+		if (val & LPA_1000MSFAIL) {
 			qca808x_phy_ms_seed_enable(phydev, false);
 		} else {
 			qca808x_phy_ms_seed_set(phydev);
