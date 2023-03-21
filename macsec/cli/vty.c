@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -359,7 +362,7 @@ void _vty_cmd_add_history(VTY_T *pVty)
 	if (pHist->list[pHist->insert] == NULL) {
 		return;
 	}
-	strcpy(pHist->list[pHist->insert], pBufTrim);
+	strlcpy(pHist->list[pHist->insert], pBufTrim, (osal_strlen(pBufTrim) + 1));
 
 	pHist->insert = (pHist->insert + 1) % VTY_HIST_MAX_SIZE;
 	pHist->cp = pHist->insert;

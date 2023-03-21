@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, 2018-2019 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -20,16 +22,6 @@
 #include <net/sock.h>
 #include <asm/io.h>
 #include <linux/version.h>
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
-#include <mach/msm_iomap.h>
-#else
-#include <linux/of.h>
-#include <linux/of_mdio.h>
-#ifdef MACSEC_IPQ806X_SUPPORT
-#include <soc/qcom/socinfo.h>
-#endif
-#endif
-
 #include <linux/platform_device.h>
 #include <linux/resource.h>
 #include <linux/types.h>

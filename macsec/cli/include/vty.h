@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -65,7 +67,7 @@ do {                                        \
     vty_output(pVty, "%% "fmt, ##__VA_ARGS__);
 
 #define vty_err_str(fmt, ...) \
-    sprintf(pVty->errStr, fmt, ##__VA_ARGS__);
+    snprintf(pVty->errStr, sizeof(pVty->errStr), fmt, ##__VA_ARGS__);
 
 typedef enum {
 	VTY_TYPE_CONSOLE,
