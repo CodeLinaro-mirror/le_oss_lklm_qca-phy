@@ -1,9 +1,7 @@
 
-KERNEL_SRC ?= /lib/modules/$(shell uname -r)/build
+PRJ_PATH ?= $(shell pwd)
 
-ifndef PRJ_PATH
-  PRJ_PATH=$(shell pwd)
-endif
+KERNEL_SRC ?= /lib/modules/$(shell uname -r)/build
 
 ####################################################################
 # 			Add All Local Flags
@@ -13,12 +11,26 @@ endif
 ####################################################################
 # 			Build Object List
 ####################################################################
-OBJ_LIST := qti_ethphy.o
+
+OBJ_LIST += qti_ethphy.o
+
+ifdef CONFIG_MACSEC
+obj ?= .
+
+DIR := macsec
+
+include $(obj)/$(DIR)/macsec_obj.mk
+
+ccflags-y += $(patsubst -I%,-I$(obj)/%,$(NSS_MACSEC_INCLUDE))
+
+OBJ_LIST += $(qca-macsec-objs)
+endif
 
 ####################################################################
 # 			Linux Kernel Module
 ####################################################################
 obj-m :=  qca-phy.o
+
 qca-phy-objs := $(OBJ_LIST)
 
 

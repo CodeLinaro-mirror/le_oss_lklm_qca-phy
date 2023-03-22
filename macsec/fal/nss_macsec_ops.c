@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -16,25 +18,16 @@
 #include "nss_macsec_ops.h"
 
 static struct secy_driver_instance_t secy_driver[] = {
-	{NAPA_PHY_CHIP, NULL, qca808x_secy_driver_init,
-		qca808x_secy_driver_exit},
+	{NAPA_PHY_CHIP, NULL, qca808x_secy_driver_init, qca808x_secy_driver_exit},
 	{MAX_PHY_CHIP, NULL, NULL, NULL}
 };
 
-static u32 secy_max_num;
 static struct secy_info_t secy_info[MAX_SECY_ID] = {
 		{INVALID_SECY_ID, MAX_PHY_CHIP},
 		{INVALID_SECY_ID, MAX_PHY_CHIP},
 		{INVALID_SECY_ID, MAX_PHY_CHIP},
 	};
 
-g_error_t secy_id_validate_check(u32 secy_id)
-{
-	if (secy_id < secy_max_num)
-		return ERROR_OK;
-	else
-		return ERROR_NOT_SUPPORT;
-}
 
 g_error_t secy_ops_init(enum secy_phy_type_t phy_type)
 {
@@ -47,15 +40,23 @@ g_error_t secy_ops_init(enum secy_phy_type_t phy_type)
 
 	return ERROR_OK;
 }
-g_error_t secy_ops_register(enum secy_phy_type_t phy_type,
-	struct secy_drv_t *secy_ops)
-{
 
+g_error_t secy_ops_register(enum secy_phy_type_t phy_type,
+			    struct secy_drv_t *secy_ops)
+{
 	secy_driver[phy_type].secy_ops = secy_ops;
 
 	return ERROR_OK;
-
 }
+
+g_error_t secy_ops_unregister(enum secy_phy_type_t phy_type)
+{
+	if (secy_driver[phy_type].secy_ops != NULL)
+		secy_driver[phy_type].secy_ops = NULL;
+
+	return ERROR_OK;
+}
+
 struct secy_drv_t *nss_macsec_secy_ops_get(u32 secy_id)
 {
 	enum secy_phy_type_t phy_type = 0;
@@ -66,12 +67,11 @@ struct secy_drv_t *nss_macsec_secy_ops_get(u32 secy_id)
 	phy_type = secy_info[secy_id].secy_phy_type;
 
 	return secy_driver[phy_type].secy_ops;
-
 }
+
 void nss_macsec_secy_info_set(u32 secy_id, u32 phy_addr)
 {
 	secy_info[secy_id].phy_addr = phy_addr;
-
 }
 
 u32 secy_id_to_phy_addr(u32 secy_id)
@@ -102,23 +102,16 @@ int nss_macsec_secy_driver_init(u32 secy_id)
 	if (secy_driver[phy_type].init != NULL)
 		secy_driver[phy_type].init(secy_id);
 
-	secy_max_num++;
-
 	return 0;
 }
-g_error_t secy_ops_unregister(enum secy_phy_type_t phy_type)
-{
 
-	if (secy_driver[phy_type].secy_ops != NULL)
-		secy_driver[phy_type].secy_ops = NULL;
-
-	return ERROR_OK;
-}
 g_error_t nss_macsec_secy_driver_cleanup(u32 secy_id)
 {
 	enum secy_phy_type_t phy_type = MAX_PHY_CHIP;
 
 	phy_type = secy_info[secy_id].secy_phy_type;
+	secy_info[secy_id].secy_phy_type = MAX_PHY_CHIP;
+	secy_info[secy_id].phy_addr      = 0;
 
 	if (secy_driver[phy_type].exit != NULL)
 		secy_driver[phy_type].exit(secy_id);

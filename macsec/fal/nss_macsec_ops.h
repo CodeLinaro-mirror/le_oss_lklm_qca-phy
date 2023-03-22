@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -655,9 +657,6 @@ g_error_t nss_macsec_secy_driver_cleanup(u32 secy_id);
 
 g_error_t secy_ops_unregister(enum secy_phy_type_t phy_type);
 
-#if IS_ENABLED(CONFIG_MACSEC)
-int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev);
-#endif
 
 #ifdef __cplusplus
 }

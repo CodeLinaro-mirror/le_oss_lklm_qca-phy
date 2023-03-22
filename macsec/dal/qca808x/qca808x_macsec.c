@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -26,6 +26,7 @@ static u32 rx_ssci[MAX_SECY_ID][SECY_POLICY_IDX_MAX + 1];
 struct secy_ctl_filt_t g_secy_tx_filt[MAX_SECY_ID];
 struct secy_ctl_filt_t g_secy_rx_filt[MAX_SECY_ID];
 static struct secy_pn_table_t *secy_pn_table[MAX_SECY_ID];
+static u32 secy_ops_flag;
 
 
 #define PHY_REG_FIELD_READ(secy_id, phy_layer, reg_addr, field, pFieldValue) \
@@ -4211,8 +4212,6 @@ static int qca808x_secy_ops_init(void)
 
 int qca808x_secy_driver_init(u32 secy_id)
 {
-	static u32 secy_ops_flag;
-
 	if (secy_ops_flag == 0) {
 		qca808x_secy_ops_init();
 		secy_ops_flag = 1;
@@ -4224,19 +4223,28 @@ int qca808x_secy_driver_init(u32 secy_id)
 }
 int qca808x_secy_driver_exit(u32 secy_id)
 {
-
-	secy_ops_unregister(NAPA_PHY_CHIP);
-
-	if (qca808x_secy_ops != NULL) {
-		kfree(qca808x_secy_ops);
-		qca808x_secy_ops = NULL;
-	}
+	u32 dev_id = 0;
+	BOOL IsLastSecy = TRUE;
 
 	if (secy_pn_table[secy_id] != NULL) {
 		kfree(secy_pn_table[secy_id]);
 		secy_pn_table[secy_id] = NULL;
 	}
 
+	for (dev_id = 0; dev_id < MAX_SECY_ID; dev_id++) {
+		if (NULL != secy_pn_table[secy_id]) {
+			IsLastSecy = FALSE;
+			break;
+		}
+	}
+	if (IsLastSecy) {
+		secy_ops_unregister(NAPA_PHY_CHIP);
+		if (qca808x_secy_ops != NULL) {
+			kfree(qca808x_secy_ops);
+			qca808x_secy_ops = NULL;
+		}
+		secy_ops_flag = 0;
+	}
 	return 0;
 }
 

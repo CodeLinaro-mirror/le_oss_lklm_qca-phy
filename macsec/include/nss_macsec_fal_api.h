@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -15,7 +17,6 @@
 #ifndef _NSS_MACSEC_FAL_API_H_
 #define _NSS_MACSEC_FAL_API_H_
 
-#include "nss_macsec_emac.h"
 #include "nss_macsec_interrupt.h"
 #include "nss_macsec.h"
 #include "nss_macsec_mib.h"
@@ -27,10 +28,6 @@ enum {
 	NSS_MACSEC_SECY_INTERRUPT_EN_GET_CMD,
 	NSS_MACSEC_SECY_INTERRUPT_EN_SET_CMD,
 	NSS_MACSEC_SECY_INTERRUPT_GET_CMD,
-	NSS_MACSEC_EMAC_INIT_CMD,
-	NSS_MACSEC_SPEED_CMD,
-	NSS_MACSEC_EMAC_ENABLE_CMD,
-	NSS_MACSEC_EMAC_RESET_CMD,
 	NSS_MACSEC_SECY_TX_SC_MIB_GET_CMD,
 	NSS_MACSEC_SECY_TX_SA_MIB_GET_CMD,
 	NSS_MACSEC_SECY_TX_MIB_GET_CMD,
@@ -204,24 +201,6 @@ struct nss_macsec_secy_interrupt_en_set_cmd {
 struct nss_macsec_secy_interrupt_get_cmd {
 	u32 secy_id;
 	fal_interrupt_t pint;
-};
-
-struct nss_macsec_emac_init_cmd {
-	u32 secy_id;
-};
-
-struct nss_macsec_speed_cmd {
-	u32 secy_id;
-	enum emac_link_speed speed;
-};
-
-struct nss_macsec_emac_enable_cmd {
-	u32 secy_id;
-	BOOL enable;
-};
-
-struct nss_macsec_emac_reset_cmd {
-	u32 secy_id;
 };
 
 struct nss_macsec_secy_tx_sc_mib_get_cmd {

@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -14,20 +16,20 @@
 
 //#include "osal_common.h"
 #include "nss_macsec_types.h"
-#include "nss_macsec_register_api.h"
 #include "nss_macsec_interrupt.h"
 
 u32 nss_macsec_secy_interrupt_en_get(u32 secy_id, fal_interrupt_en_t *p_int_en)
 {
-	return ERROR_OK;
+	return ERROR_NOT_SUPPORT;
 }
 
 u32 nss_macsec_secy_interrupt_en_set(u32 secy_id, fal_interrupt_en_t *p_int_en)
 {
-	return ERROR_OK;
+	return ERROR_NOT_SUPPORT;
 }
 
 u32 nss_macsec_secy_interrupt_get(u32 secy_id, fal_interrupt_t *pint)
 {
-	return ERROR_OK;
+	return ERROR_NOT_SUPPORT;
 }
+

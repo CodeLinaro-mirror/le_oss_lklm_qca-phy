@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -27,7 +29,6 @@
 #include <netinet/in.h>
 
 #include "nss_macsec_sdk_api.h"
-#include "nss_macsec_emac.h"
 #include "nss_macsec_interrupt.h"
 #include "nss_macsec.h"
 #include "nss_macsec_mib.h"
@@ -227,102 +228,6 @@ u32 nss_macsec_secy_interrupt_get(u32 secy_id, fal_interrupt_t *pint)
 	if (SDK_RET_SUCCESS == ret) {
 		*pint = param->pint;
 	}
-	return ret;
-}
-
-u32 nss_macsec_emac_init(u32 secy_id)
-{
-	unsigned char buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_emac_init_cmd))]
-	    = { 0 };
-	struct sdk_msg_header *msg_header =
-	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
-	struct nss_macsec_emac_init_cmd *param =
-	    (struct nss_macsec_emac_init_cmd *)SDK_MSG_DATA(buf);
-	int ret = 0;
-
-	msg_header->version = SDK_MSG_VER;
-	msg_header->cmd_type = SDK_FAL_CMD;
-	msg_header->sub_type = NSS_MACSEC_EMAC_INIT_CMD;
-	msg_header->buf_len = sizeof(struct nss_macsec_emac_init_cmd);
-	param->secy_id = secy_id;
-
-	ret =
-	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
-				       sizeof(struct nss_macsec_emac_init_cmd),
-				       NETLINK_SDK);
-	return ret;
-}
-
-u32 nss_macsec_speed(u32 secy_id, enum emac_link_speed speed)
-{
-	unsigned char buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_speed_cmd))] =
-	    { 0 };
-	struct sdk_msg_header *msg_header =
-	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
-	struct nss_macsec_speed_cmd *param =
-	    (struct nss_macsec_speed_cmd *)SDK_MSG_DATA(buf);
-	int ret = 0;
-
-	msg_header->version = SDK_MSG_VER;
-	msg_header->cmd_type = SDK_FAL_CMD;
-	msg_header->sub_type = NSS_MACSEC_SPEED_CMD;
-	msg_header->buf_len = sizeof(struct nss_macsec_speed_cmd);
-	param->secy_id = secy_id;
-	param->speed = speed;
-
-	ret =
-	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
-				       sizeof(struct nss_macsec_speed_cmd),
-				       NETLINK_SDK);
-	return ret;
-}
-
-u32 nss_macsec_emac_enable(u32 secy_id, BOOL enable)
-{
-	unsigned char
-	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_emac_enable_cmd))] =
-	    { 0 };
-	struct sdk_msg_header *msg_header =
-	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
-	struct nss_macsec_emac_enable_cmd *param =
-	    (struct nss_macsec_emac_enable_cmd *)SDK_MSG_DATA(buf);
-	int ret = 0;
-
-	msg_header->version = SDK_MSG_VER;
-	msg_header->cmd_type = SDK_FAL_CMD;
-	msg_header->sub_type = NSS_MACSEC_EMAC_ENABLE_CMD;
-	msg_header->buf_len = sizeof(struct nss_macsec_emac_enable_cmd);
-	param->secy_id = secy_id;
-	param->enable = enable;
-
-	ret =
-	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
-				       sizeof(struct
-					      nss_macsec_emac_enable_cmd),
-				       NETLINK_SDK);
-	return ret;
-}
-
-u32 nss_macsec_emac_reset(u32 secy_id)
-{
-	unsigned char
-	    buf[SDK_MSG_SIZE(sizeof(struct nss_macsec_emac_reset_cmd))] = { 0 };
-	struct sdk_msg_header *msg_header =
-	    (struct sdk_msg_header *)SDK_MSG_HEADER(buf);
-	struct nss_macsec_emac_reset_cmd *param =
-	    (struct nss_macsec_emac_reset_cmd *)SDK_MSG_DATA(buf);
-	int ret = 0;
-
-	msg_header->version = SDK_MSG_VER;
-	msg_header->cmd_type = SDK_FAL_CMD;
-	msg_header->sub_type = NSS_MACSEC_EMAC_RESET_CMD;
-	msg_header->buf_len = sizeof(struct nss_macsec_emac_reset_cmd);
-	param->secy_id = secy_id;
-
-	ret =
-	    nss_macsec_sdk_netlink_msg(SDK_CALL_MSG, buf,
-				       sizeof(struct nss_macsec_emac_reset_cmd),
-				       NETLINK_SDK);
 	return ret;
 }
 

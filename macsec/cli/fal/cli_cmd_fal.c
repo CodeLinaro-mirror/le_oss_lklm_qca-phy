@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, 2016, 2018-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -17,7 +19,6 @@
 #include "cli.h"
 #include "cli_cmd.h"
 #include "nss_macsec.h"
-#include "nss_macsec_emac.h"
 #include "nss_macsec_interrupt.h"
 #include "nss_macsec_mib.h"
 #include "nss_macsec_secy.h"

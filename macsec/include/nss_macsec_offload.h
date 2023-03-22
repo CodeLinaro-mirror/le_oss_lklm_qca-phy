@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -14,6 +14,8 @@
 
 #ifndef NSS_MACSEC_OFFLOAD_H
 #define NSS_MACSEC_OFFLOAD_H
+
+#include <net/macsec.h>
 
 
 #define NSS_SECY_SC_MAX_NUM     16
@@ -34,6 +36,7 @@ typedef struct {
 	nss_macsec_secy_sc_map_data_t secy_rxsc[NSS_SECY_SC_MAX_NUM];
 
 }nss_macsec_secy_cfg_t;
+
 
 #endif
 

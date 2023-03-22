@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, 2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -13,7 +15,6 @@
  */
 
 #include "nss_macsec_sdk_api.h"
-#include "nss_macsec_emac.h"
 #include "nss_macsec_interrupt.h"
 #include "nss_macsec.h"
 #include "nss_macsec_mib.h"
@@ -26,10 +27,6 @@ unsigned int nss_macsec_cmd_len[] = {
 	sizeof(struct nss_macsec_secy_interrupt_en_get_cmd),
 	sizeof(struct nss_macsec_secy_interrupt_en_set_cmd),
 	sizeof(struct nss_macsec_secy_interrupt_get_cmd),
-	sizeof(struct nss_macsec_emac_init_cmd),
-	sizeof(struct nss_macsec_speed_cmd),
-	sizeof(struct nss_macsec_emac_enable_cmd),
-	sizeof(struct nss_macsec_emac_reset_cmd),
 	sizeof(struct nss_macsec_secy_tx_sc_mib_get_cmd),
 	sizeof(struct nss_macsec_secy_tx_sa_mib_get_cmd),
 	sizeof(struct nss_macsec_secy_tx_mib_get_cmd),
@@ -230,32 +227,6 @@ unsigned int nss_macsec_fal_msg_handle(struct sdk_msg_header *header)
 			ret =
 			    nss_macsec_secy_interrupt_get(param->secy_id,
 							  &param->pint);
-		}
-		break;
-	case NSS_MACSEC_EMAC_INIT_CMD:{
-			struct nss_macsec_emac_init_cmd *param =
-			    (struct nss_macsec_emac_init_cmd *)(header + 1);
-			ret = nss_macsec_emac_init(param->secy_id);
-		}
-		break;
-	case NSS_MACSEC_SPEED_CMD:{
-			struct nss_macsec_speed_cmd *param =
-			    (struct nss_macsec_speed_cmd *)(header + 1);
-			ret = nss_macsec_speed(param->secy_id, param->speed);
-		}
-		break;
-	case NSS_MACSEC_EMAC_ENABLE_CMD:{
-			struct nss_macsec_emac_enable_cmd *param =
-			    (struct nss_macsec_emac_enable_cmd *)(header + 1);
-			ret =
-			    nss_macsec_emac_enable(param->secy_id,
-						   param->enable);
-		}
-		break;
-	case NSS_MACSEC_EMAC_RESET_CMD:{
-			struct nss_macsec_emac_reset_cmd *param =
-			    (struct nss_macsec_emac_reset_cmd *)(header + 1);
-			ret = nss_macsec_emac_reset(param->secy_id);
 		}
 		break;
 	case NSS_MACSEC_SECY_TX_SC_MIB_GET_CMD:{
