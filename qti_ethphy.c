@@ -22,6 +22,9 @@
 #include <linux/ethtool_netlink.h>
 #include <linux/bitfield.h>
 #include <linux/phylink.h>
+#if IS_ENABLED(CONFIG_MACSEC)
+#include "macsec/include/nss_macsec_init.h"
+#endif
 #include "qti_ethphy.h"
 
 
@@ -156,12 +159,19 @@ static int qti_phy_probe(struct phy_device *phydev)
 
 	phydev->priv = priv;
 
+#if IS_ENABLED(CONFIG_MACSEC)
+	nss_macsec_device_init(phydev);
+#endif
+
 	return 0;
 }
 
 static void qti_phy_remove(struct phy_device *phydev)
 {
-
+#if IS_ENABLED(CONFIG_MACSEC)
+	nss_macsec_device_cleanup(phydev);
+#endif
+	return;
 }
 
 static int qti_phy_get_features(struct phy_device *phydev)
@@ -590,6 +600,10 @@ static int qca808x_phy_config_init(struct phy_device *phydev)
 			return ret;
 	}
 
+#if IS_ENABLED(CONFIG_MACSEC) && defined(NETIF_F_HW_MACSEC)
+	if(phydev->attached_dev)
+		phydev->attached_dev->features |= NETIF_F_HW_MACSEC;
+#endif
 	/* Configure adc threshold as 100mv for the link 10M */
 	return qti_phy_debug_reg_mask(phydev, QCA808X_PHY_DEBUG_ADC_THRESHOLD,
 				      QCA808X_ADC_THRESHOLD_MASK,
@@ -822,6 +836,9 @@ static int __init phy_module_init(void)
 {
 	int ret = 0;
 
+#if IS_ENABLED(CONFIG_MACSEC)
+	nss_macsec_init();
+#endif
 	ret = phy_drivers_register(qti_phy_drivers,
 				   ARRAY_SIZE(qti_phy_drivers), THIS_MODULE);
 
@@ -830,6 +847,9 @@ static int __init phy_module_init(void)
 
 static void __exit phy_module_cleanup(void)
 {
+#if IS_ENABLED(CONFIG_MACSEC)
+	nss_macsec_exit();
+#endif
 	phy_drivers_unregister(qti_phy_drivers, ARRAY_SIZE(qti_phy_drivers));
 }
 
