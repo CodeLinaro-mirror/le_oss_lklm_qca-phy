@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, 2016, 2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -585,6 +587,8 @@ static int _cli_str_char_num(const char *str, char c)
 	return count;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 /******************************************************************************
  *
  * description:
@@ -762,6 +766,7 @@ int cli_str_2_list(const char *str, const sa_u32_t min, const sa_u32_t max,
 
 	return 0;
 }
+#pragma GCC diagnostic pop
 
 /* sci=11223344:55667788 */
 int cli_str_2_sci(const char *str, sa_u8_t *sci)
