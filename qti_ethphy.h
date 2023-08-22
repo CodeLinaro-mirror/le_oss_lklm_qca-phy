@@ -180,6 +180,7 @@
 
 struct qti_priv {
 	int flags;
+	u32 wol;
 	uint8_t is_fiber;
 	uint8_t is_1000basex;
 };
