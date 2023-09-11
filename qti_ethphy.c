@@ -72,6 +72,9 @@ static int qti_phy_set_wol(struct phy_device *phydev,
 			   struct ethtool_wolinfo *wol)
 {
 	int ret, irq_enabled;
+	struct qti_priv *priv = phydev->priv;
+
+	priv->wol = wol->wolopts;
 
 	if (wol->wolopts & WAKE_MAGIC) {
 		struct net_device *ndev = phydev->attached_dev;
@@ -136,9 +139,10 @@ static void qti_phy_get_wol(struct phy_device *phydev,
 			    struct ethtool_wolinfo *wol)
 {
 	int value;
+	struct qti_priv *priv = phydev->priv;
 
-	wol->supported = WAKE_MAGIC;
-	wol->wolopts = 0;
+	wol->supported = WAKE_MAGIC | WAKE_PHY;
+	wol->wolopts = (priv->wol & WAKE_PHY) ? WAKE_PHY : 0;
 
 	value = phy_read_mmd(phydev, MDIO_MMD_PCS, QTI_PHY_MMD3_WOL_CTRL);
 	if (value < 0)

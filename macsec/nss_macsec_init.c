@@ -30,7 +30,6 @@
 #include "nss_macsec_sdk_api.h"
 #include "nss_macsec_fal_api.h"
 #include "nss_macsec_utility.h"
-#include "nss_macsec_os.h"
 #include "nss_macsec_ops.h"
 #include "nss_macsec_offload.h"
 #include "nss_macsec_init.h"
@@ -47,23 +46,6 @@ struct nss_macsec_device_t{
 static struct nss_macsec_device_t nss_macsec_device[MACSEC_DEVICE_NUM];
 
 
-unsigned int nss_macsec_device_exist(unsigned int dev_id)
-{
-	printk("macsec[%d] doesn't exist, any operation for it is not permitted!\n", dev_id);
-	return ERROR_NOT_SUPPORT;
-}
-
-int nss_macsec_reg_read(unsigned int dev_id, unsigned int reg_addr,
-			unsigned int *pvalue)
-{
-	return ERROR_NOT_SUPPORT;
-}
-
-int nss_macsec_reg_write(unsigned int dev_id, unsigned int reg_addr,
-			 unsigned int pvalue)
-{
-	return ERROR_NOT_SUPPORT;
-}
 
 static unsigned int nss_macsec_msg_handle(void *msg_data, unsigned int *sync)
 {

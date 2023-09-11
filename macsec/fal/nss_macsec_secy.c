@@ -17,7 +17,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include "nss_macsec_types.h"
-#include "nss_macsec_os.h"
 #include "nss_macsec_secy_tx.h"
 #include "nss_macsec_secy_rx.h"
 #include "nss_macsec_utility.h"
