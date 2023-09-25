@@ -76,7 +76,7 @@ static u32 nss_get_available_transmit_sc(u32 secy_id, u32 *channel)
 
 		if (!in_use) {
 			*channel = sc_ch;
-		    osal_print("%s: channel=%u\n", __func__, *channel);
+			//osal_print("%s: channel=%u\n", __func__, *channel);
 			return ERROR_OK;
 		}
 	}
@@ -94,8 +94,8 @@ static u32 nss_get_available_receive_sc(u32 secy_id, u32 *channel)
 
 		if (!in_use) {
 			*channel = sc_ch;
-			osal_print("%s: channel=%u\n", __func__, *channel);
-						return ERROR_OK;
+			//osal_print("%s: channel=%u\n", __func__, *channel);
+			return ERROR_OK;
 		}
 	}
 	return ERROR_NOT_FOUND;
@@ -119,27 +119,10 @@ static fal_cipher_suite_e nss_cipher_suite_type_get(struct macsec_secy *secy)
 	return cipher_suite;
 }
 
-static u32 nss_set_txsc(const u32 secy_id, const int channel, struct macsec_secy *secy)
+static u32 nss_update_txsc(const u32 secy_id, const int channel, struct macsec_secy *secy)
 {
 	u32 ret = ERROR_OK;
-	fal_tx_class_lut_t entry;
-	fal_cipher_suite_e cipher_suite;
-	u8 psci[FAL_SCI_LEN];
 	u8 tci = 0;
-
-	cipher_suite = nss_cipher_suite_type_get(secy);
-	ret = nss_macsec_secy_cipher_suite_set(secy_id, cipher_suite);
-	if (ret){
-		osal_print("%s: fail to secy_cipher_suite_set\n", __func__);
-		return ret;
-	}
-
-	/* class lut */
-	memset(&entry, 0, sizeof(entry));
-
-	entry.valid = 1;
-	entry.action = FAL_TX_CLASS_ACTION_FORWARD;
-	entry.channel = channel;
 
 	if (secy->tx_sc.encrypt)
 		tci |= BIT(1);
@@ -155,18 +138,6 @@ static u32 nss_set_txsc(const u32 secy_id, const int channel, struct macsec_secy
 	if (!(secy->icv_len == 16 && !secy->tx_sc.encrypt))
 		tci |= BIT(0);
 
-	memcpy(psci, (u8*)&(secy->sci), FAL_SCI_LEN);
-
-	ret = nss_macsec_secy_tx_class_lut_set(secy_id, channel, &entry);
-	if (ret){
-		osal_print("%s: fail to secy_tx_class_lut_set\n", __func__);
-		return ret;
-	}
-	ret = nss_macsec_secy_tx_sc_create(secy_id, channel, psci, FAL_SCI_LEN);
-	if (ret){
-		osal_print("%s: fail to set secy SCI\n", __func__);
-		return ret;
-	}
 	ret = nss_macsec_secy_tx_sc_tci_7_2_set(secy_id, channel, tci);
 	if (ret){
 		osal_print("%s: fail to set secy TCI\n", __func__);
@@ -181,22 +152,46 @@ static u32 nss_set_txsc(const u32 secy_id, const int channel, struct macsec_secy
 	return ERROR_OK;
 }
 
-static u32 nss_set_rxsc(const u32 secy_id, const int channel, struct macsec_secy *secy, struct macsec_rx_sc *rx_sc)
+static u32 nss_create_txsc(const u32 secy_id, const int channel, struct macsec_secy *secy)
 {
 	u32 ret = ERROR_OK;
-	fal_rx_prc_lut_t entry;
-	fal_rx_sc_validate_frame_e vf;
+	u8 psci[FAL_SCI_LEN];
+	fal_tx_class_lut_t entry;
 
-	/* rx prc lut */
-	memset(&entry, 0, sizeof(fal_rx_prc_lut_t));
-
-	memcpy(entry.sci, (u8*)&(rx_sc->sci), FAL_SCI_LEN);
-
-	entry.sci_mask = 0xf;
+	/* class lut */
+	memset(&entry, 0, sizeof(entry));
 
 	entry.valid = 1;
+	entry.action = FAL_TX_CLASS_ACTION_FORWARD;
 	entry.channel = channel;
-	entry.action = FAL_RX_PRC_ACTION_PROCESS;
+
+	ret = nss_macsec_secy_tx_class_lut_set(secy_id, channel, &entry);
+	if (ret){
+		osal_print("%s: fail to secy_tx_class_lut_set\n", __func__);
+		return ret;
+	}
+
+	memcpy(psci, (u8*)&(secy->sci), FAL_SCI_LEN);
+
+	ret = nss_macsec_secy_tx_sc_create(secy_id, channel, psci, FAL_SCI_LEN);
+	if (ret){
+		osal_print("%s: fail to set secy SCI\n", __func__);
+		return ret;
+	}
+
+	ret = nss_update_txsc(secy_id, channel, secy);
+	if (ret){
+		osal_print("%s: fail to set txsc\n", __func__);
+		return ret;
+	}
+
+	return ERROR_OK;
+}
+
+static u32 nss_update_rxsc(const u32 secy_id, const int channel, struct macsec_secy *secy)
+{
+	u32 ret = ERROR_OK;
+	fal_rx_sc_validate_frame_e vf;
 
 	/* rx validate frame  */
 	if (secy->validate_frames == MACSEC_VALIDATE_STRICT)
@@ -206,16 +201,6 @@ static u32 nss_set_rxsc(const u32 secy_id, const int channel, struct macsec_secy
 	else
 		vf = FAL_RX_SC_VALIDATE_FRAME_DISABLED;
 
-	ret = nss_macsec_secy_rx_prc_lut_set(secy_id, channel, &entry);
-	if (ret){
-		osal_print("%s: fail to rx_prc_lut_set \n", __func__);
-		return ret;
-	}
-	ret = nss_macsec_secy_rx_sc_create(secy_id, channel);
-	if (ret){
-		osal_print("%s: fail to rx_sc_create \n", __func__);
-		return ret;
-	}
 	ret = nss_macsec_secy_rx_sc_validate_frame_set(secy_id, channel, vf);
 	if (ret){
 		osal_print("%s: fail to rx_sc_validate_frame_set \n", __func__);
@@ -231,6 +216,39 @@ static u32 nss_set_rxsc(const u32 secy_id, const int channel, struct macsec_secy
 							   secy->replay_window);
 	if (ret){
 		osal_print("%s: fail to rx_sc_anti_replay_window_set \n", __func__);
+		return ret;
+	}
+	return ERROR_OK;
+}
+
+static u32 nss_create_rxsc(const u32 secy_id, const int channel, struct macsec_secy *secy, struct macsec_rx_sc *rx_sc)
+{
+	u32 ret = ERROR_OK;
+	fal_rx_prc_lut_t entry;
+
+	/* rx prc lut */
+	memset(&entry, 0, sizeof(fal_rx_prc_lut_t));
+
+	memcpy(entry.sci, (u8*)&(rx_sc->sci), FAL_SCI_LEN);
+	entry.sci_mask = 0xf;
+
+	entry.valid = 1;
+	entry.channel = channel;
+	entry.action = FAL_RX_PRC_ACTION_PROCESS;
+
+	ret = nss_macsec_secy_rx_prc_lut_set(secy_id, channel, &entry);
+	if (ret){
+		osal_print("%s: fail to rx_prc_lut_set \n", __func__);
+		return ret;
+	}
+	ret = nss_macsec_secy_rx_sc_create(secy_id, channel);
+	if (ret){
+		osal_print("%s: fail to rx_sc_create \n", __func__);
+		return ret;
+	}
+	ret = nss_update_rxsc(secy_id, channel, secy);
+	if (ret){
+		osal_print("%s: fail to rx_sc_validate_frame_set \n", __func__);
 		return ret;
 	}
 	return ERROR_OK;
@@ -291,6 +309,12 @@ static int nss_mdo_dev_open(struct macsec_context *ctx)
 	ret = nss_macsec_secy_controlled_port_en_set(secy_id, TRUE);
 	if (ret) {
 		osal_print("%s: fail to enable controlled_port\n", __func__);
+		return ret;
+	}
+
+	ret = nss_macsec_secy_en_set(secy_id, TRUE);
+	if (ret){
+		osal_print("%s: fail to Enable MACsec\n", __func__);
 	}
 	return ret;
 }
@@ -311,6 +335,12 @@ static int nss_mdo_dev_stop(struct macsec_context *ctx)
 		return ERROR_NOT_FOUND;
 	}
 
+	ret = nss_macsec_secy_en_set(secy_id, FALSE);
+	if (ret) {
+		osal_print("%s: fail to disable MACsec\n", __func__);
+		return ret;
+	}
+
 	ret = nss_macsec_secy_controlled_port_en_set(secy_id, FALSE);
 	if (ret) {
 		osal_print("%s: fail to disable controlled_port\n", __func__);
@@ -321,8 +351,7 @@ static int nss_mdo_dev_stop(struct macsec_context *ctx)
 static int nss_mdo_add_secy(struct macsec_context *ctx)
 {
 	u32 secy_id = 0, channel = 0, ret = ERROR_OK;
-	fal_rx_ctl_filt_t rx_ctl_filt;
-	fal_tx_ctl_filt_t tx_ctl_filt;
+	fal_cipher_suite_e cipher_suite;
 
 	if (ctx->prepare)
 		return ERROR_OK;
@@ -336,39 +365,10 @@ static int nss_mdo_add_secy(struct macsec_context *ctx)
 		return ERROR_NOT_FOUND;
 	}
 
-	if (!g_pdev_secy_cfg[secy_id]->secy_en){
-		/* Enable Secy and Let EAPoL bypass */
-		ret = nss_macsec_secy_en_set(secy_id, TRUE);
-		if (ret){
-			osal_print("%s: fail to Enable Secy\n", __func__);
-			return ret;
-		}
-		ret = nss_macsec_secy_sc_sa_mapping_mode_set(secy_id, FAL_SC_SA_MAP_1_4);
-		if (ret){
-			osal_print("%s: fail to Set secy_sc_sa_mapping_mode\n", __func__);
-			return ret;
-		}
-		memset(&rx_ctl_filt, 0, sizeof(rx_ctl_filt));
-		rx_ctl_filt.bypass = 1;
-		rx_ctl_filt.match_type = IG_CTL_COMPARE_ETHER_TYPE;
-		rx_ctl_filt.match_mask = 0xffff;
-		rx_ctl_filt.ether_type_da_range = 0x888e;
-		ret = nss_macsec_secy_rx_ctl_filt_set(secy_id, 0, &rx_ctl_filt);
-		if (ret){
-			osal_print("%s: fail to rx ctl filt set\n", __func__);
-			return ret;
-		}
-		memset(&tx_ctl_filt, 0, sizeof(tx_ctl_filt));
-		tx_ctl_filt.bypass = 1;
-		tx_ctl_filt.match_type = EG_CTL_COMPARE_ETHER_TYPE;
-		tx_ctl_filt.match_mask = 0xffff;
-		tx_ctl_filt.ether_type_da_range = 0x888e;
-		ret = nss_macsec_secy_tx_ctl_filt_set(secy_id, 0, &tx_ctl_filt);
-		if (ret){
-			osal_print("%s: fail to tx ctl filt set\n", __func__);
-			return ret;
-		}
-		g_pdev_secy_cfg[secy_id]->secy_en = TRUE;
+	ret = nss_macsec_secy_sc_sa_mapping_mode_set(secy_id, FAL_SC_SA_MAP_1_4);
+	if (ret){
+		osal_print("%s: fail to Set secy_sc_sa_mapping_mode\n", __func__);
+		return ret;
 	}
 
 	ret = nss_get_available_transmit_sc(secy_id, &channel);
@@ -377,14 +377,14 @@ static int nss_mdo_add_secy(struct macsec_context *ctx)
 		return ret;
 	}
 
-	ret = nss_macsec_secy_tx_sc_confidentiality_offset_set(secy_id, channel,
-							       NSS_SECY_CONFIDENTIALITY_OFFSET_00);
-	if (ret != ERROR_OK) {
-		osal_print("%s: fail to secy_tx_sc_confidentiality_offset_set\n", __func__);
+	cipher_suite = nss_cipher_suite_type_get(ctx->secy);
+	ret = nss_macsec_secy_cipher_suite_set(secy_id, cipher_suite);
+	if (ret){
+		osal_print("%s: fail to secy_cipher_suite_set\n", __func__);
 		return ret;
 	}
 
-	ret = nss_set_txsc(secy_id, channel, ctx->secy);
+	ret = nss_create_txsc(secy_id, channel, ctx->secy);
 	if (ret == ERROR_OK) {
 		g_pdev_secy_cfg[secy_id]->secy_txsc[channel].sw_secy = ctx->secy;
 		g_pdev_secy_cfg[secy_id]->n_secy_txsc += 1;
@@ -412,11 +412,11 @@ static int nss_mdo_upd_secy(struct macsec_context *ctx)
 
 	ret = nss_get_txsc_idx_from_secy(secy_id, ctx->secy, &channel);
 	if (ret != ERROR_OK) {
-		//Add secy by upd secy OPS
-		return nss_mdo_add_secy(ctx);
+		osal_print("%s: not found channel\n", __func__);
+		return ret;
 	}
 
-	ret = nss_set_txsc(secy_id, channel, ctx->secy);
+	ret = nss_update_txsc(secy_id, channel, ctx->secy);
 	if (ret) {
 		osal_print("%s: fail to update secy\n", __func__);
 	}
@@ -457,12 +457,6 @@ static int nss_mdo_del_secy(struct macsec_context *ctx)
 		osal_print("%s: fail to del secy\n", __func__);
 	}
 
-	if ((0 == g_pdev_secy_cfg[secy_id]->n_secy_txsc)&&
-	    (TRUE == g_pdev_secy_cfg[secy_id]->secy_en)) {
-		nss_macsec_secy_en_set(secy_id, FALSE);
-		nss_macsec_secy_rx_ctl_filt_clear_all(secy_id);
-		g_pdev_secy_cfg[secy_id]->secy_en = FALSE;
-	}
 	return ret;
 }
 
@@ -609,7 +603,7 @@ static int nss_mdo_add_rxsc(struct macsec_context *ctx)
 		return ret;
 	}
 
-	ret = nss_set_rxsc(secy_id, channel, ctx->secy, ctx->rx_sc);
+	ret = nss_create_rxsc(secy_id, channel, ctx->secy, ctx->rx_sc);
 	if (ret == ERROR_OK) {
 		g_pdev_secy_cfg[secy_id]->secy_rxsc[channel].sw_secy = ctx->secy;
 		g_pdev_secy_cfg[secy_id]->secy_rxsc[channel].rx_sc = ctx->rx_sc;
@@ -641,7 +635,7 @@ static int nss_mdo_upd_rxsc(struct macsec_context *ctx)
 		return ret;
 	}
 
-	ret = nss_set_rxsc(secy_id, channel, ctx->secy, ctx->rx_sc);
+	ret = nss_update_rxsc(secy_id, channel, ctx->secy);
 	if (ret) {
 		osal_print("%s: fail to update rxsc\n", __func__);
 	}
