@@ -187,6 +187,8 @@ int nss_macsec_phy_mdio_write(u32 dev_id, u32 reg_addr, u16 val)
 	int ret = 0;
 
 	phydev = nss_device_id_to_phydev(dev_id);
+	if (NULL == phydev)
+		return -ENODEV;
         ret = phy_write(phydev, reg_addr, val);
 	return ret;
 }
@@ -197,6 +199,8 @@ int nss_macsec_phy_mdio_read(u32 dev_id, u32 reg_addr, u16 *val)
 	int ret = 0;
 
 	phydev = nss_device_id_to_phydev(dev_id);
+	if (NULL == phydev)
+		return -ENODEV;
 	ret = phy_read(phydev, reg_addr);
 	if (ret < 0)
 		return ret;

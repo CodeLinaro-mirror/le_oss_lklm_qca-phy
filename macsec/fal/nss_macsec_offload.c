@@ -444,6 +444,8 @@ static int nss_mdo_del_secy(struct macsec_context *ctx)
 		osal_print("%s: not found channel\n", __func__);
 		return ret;
 	}
+	if (channel >= NSS_SECY_SC_MAX_NUM)
+		return ERROR_NOT_FOUND;
 
 	ret = nss_macsec_secy_tx_class_lut_clear(secy_id, channel);
 	if (ret == ERROR_OK) {
@@ -663,6 +665,8 @@ static int nss_mdo_del_rxsc(struct macsec_context *ctx)
 		osal_print("%s: not found channel\n", __func__);
 		return ret;
 	}
+	if (channel >= NSS_SECY_SC_MAX_NUM)
+		return ERROR_NOT_FOUND;
 
 	ret = nss_macsec_secy_rx_sc_del(secy_id, channel);
 	if (ret != ERROR_OK) {
@@ -1011,7 +1015,7 @@ static const struct macsec_ops nss_macsec_mdo_ops = {
 int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev)
 {
 #if defined(NETIF_F_HW_MACSEC)
-	struct net_device *ndev = phydev->attached_dev;
+	struct net_device *ndev = NULL;
 #endif
 
 	if (dev_id >= MAX_SECY_ID) {
@@ -1035,6 +1039,7 @@ int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev)
 			}
 			phydev->macsec_ops = &nss_macsec_mdo_ops;
 #if defined(NETIF_F_HW_MACSEC)
+			ndev = phydev->attached_dev;
 			if(ndev)
 				ndev->features |= NETIF_F_HW_MACSEC;
 #endif
