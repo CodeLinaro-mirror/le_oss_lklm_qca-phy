@@ -29,9 +29,11 @@ endif
 ####################################################################
 # 			Linux Kernel Module
 ####################################################################
+ifdef CONFIG_QCA_PHY
 obj-m :=  qca-phy.o
 
 qca-phy-objs := $(OBJ_LIST)
+endif
 
 
 all:
