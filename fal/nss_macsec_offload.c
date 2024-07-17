@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022, 2024 Qualcomm Innovation Center, Inc. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -146,13 +146,13 @@ static fal_cipher_suite_e nss_cipher_suite_type_get(struct macsec_secy *secy)
 
 static u32 nss_set_txsc(const u32 secy_id, const int channel, struct macsec_secy *secy)
 {
-    u32 ret = ERROR_OK;
+	u32 ret = ERROR_OK;
 	fal_tx_class_lut_t entry;
 	fal_cipher_suite_e cipher_suite;
 	u8 psci[FAL_SCI_LEN];
 	u8 tci = 0;
 
-    cipher_suite = nss_cipher_suite_type_get(secy);
+	cipher_suite = nss_cipher_suite_type_get(secy);
 	ret = nss_macsec_secy_cipher_suite_set(secy_id, cipher_suite);
 	if (ret){
 		osal_print("%s: fail to secy_cipher_suite_set\n", __func__);
@@ -271,7 +271,7 @@ static u32 nss_update_txsa(const u32 secy_id, const int channel, const unsigned 
 		osal_print("%s: fail to tx_sa_next_pn_set \n", __func__);
 		return ret;
 	}
-    ret = nss_macsec_secy_tx_sa_en_set(secy_id, channel, an, tx_sa->active);
+	ret = nss_macsec_secy_tx_sa_en_set(secy_id, channel, an, tx_sa->active);
 	if (ret){
 		osal_print("%s: fail to tx_sa_en_set \n", __func__);
 		return ret;
@@ -308,7 +308,7 @@ static int nss_mdo_dev_open(struct macsec_context *ctx)
 	if (NULL == ctx->phydev)
 		return ERROR_PARAM;
 
-    ret = nss_secy_id_get(ctx->phydev, &secy_id);
+	ret = nss_secy_id_get(ctx->phydev, &secy_id);
 	if (ret) {
 		osal_print("%s: fail to find secy_id\n", __func__);
 		return ret;
@@ -331,7 +331,7 @@ static int nss_mdo_dev_stop(struct macsec_context *ctx)
 	if (NULL == ctx->phydev)
 		return ERROR_PARAM;
 
-    ret = nss_secy_id_get(ctx->phydev, &secy_id);
+	ret = nss_secy_id_get(ctx->phydev, &secy_id);
 	if (ret) {
 		osal_print("%s: fail to find secy_id\n", __func__);
 		return ret;
@@ -356,13 +356,13 @@ static int nss_mdo_add_secy(struct macsec_context *ctx)
 	if (NULL == ctx->phydev)
 		return ERROR_PARAM;
 
-    ret = nss_secy_id_get(ctx->phydev, &secy_id);
+	ret = nss_secy_id_get(ctx->phydev, &secy_id);
 	if (ret) {
 		osal_print("%s: fail to find secy_id\n", __func__);
 		return ret;
 	}
 
-    if (!g_pdev_secy_cfg[secy_id]->secy_en){
+	if (!g_pdev_secy_cfg[secy_id]->secy_en){
 		/* Enable Secy and Let EAPoL bypass */
 		ret = nss_macsec_secy_en_set(secy_id, TRUE);
 		if (ret){
@@ -395,29 +395,29 @@ static int nss_mdo_add_secy(struct macsec_context *ctx)
 			return ret;
 		}
 		g_pdev_secy_cfg[secy_id]->secy_en = TRUE;
-    }
+	}
 
 	ret = nss_get_available_transmit_sc(secy_id, &channel);
-	if (ret != ERROR_OK) {
+	if ((ret != ERROR_OK) || (channel >= NSS_SECY_SC_MAX_NUM)) {
 		osal_print("%s: no avaiable channel\n", __func__);
 		return ret;
 	}
 
 	ret = nss_macsec_secy_tx_sc_confidentiality_offset_set(secy_id, channel,
-									NSS_SECY_CONFIDENTIALITY_OFFSET_00);
+					NSS_SECY_CONFIDENTIALITY_OFFSET_00);
 	if (ret != ERROR_OK) {
 		osal_print("%s: fail to secy_tx_sc_confidentiality_offset_set\n", __func__);
 		return ret;
 	}
 
-    ret = nss_set_txsc(secy_id, channel, ctx->secy);
+	ret = nss_set_txsc(secy_id, channel, ctx->secy);
 	if (ret == ERROR_OK) {
 		g_pdev_secy_cfg[secy_id]->secy_txsc[channel].sw_secy = ctx->secy;
 		g_pdev_secy_cfg[secy_id]->n_secy_txsc += 1;
 	} else {
 		osal_print("%s: fail to add secy\n", __func__);
 	}
-    return ret;
+	return ret;
 }
 
 static int nss_mdo_upd_secy(struct macsec_context *ctx)
@@ -467,12 +467,12 @@ static int nss_mdo_del_secy(struct macsec_context *ctx)
 	}
 
 	ret = nss_get_txsc_idx_from_secy(secy_id, ctx->secy, &channel);
-	if (ret != ERROR_OK) {
+	if ((ret != ERROR_OK) || (channel >= NSS_SECY_SC_MAX_NUM)) {
 		osal_print("%s: not found channel\n", __func__);
 		return ret;
 	}
 
-    ret = nss_macsec_secy_tx_class_lut_clear(secy_id, channel);
+	ret = nss_macsec_secy_tx_class_lut_clear(secy_id, channel);
 	if (ret == ERROR_OK) {
 		g_pdev_secy_cfg[secy_id]->secy_txsc[channel].sw_secy = NULL;
 		if (g_pdev_secy_cfg[secy_id]->n_secy_txsc >0) {
@@ -548,7 +548,7 @@ static int nss_mdo_add_txsa(struct macsec_context *ctx)
 		return ret;
 	}
 
-    ret = nss_update_txsa(secy_id, channel, ctx->sa.assoc_num, ctx->sa.tx_sa);
+	ret = nss_update_txsa(secy_id, channel, ctx->sa.assoc_num, ctx->sa.tx_sa);
 	if (ret){
 		osal_print("%s: fail to nss_set_txsa \n", __func__);
 		return ret;
@@ -608,7 +608,7 @@ static int nss_mdo_del_txsa(struct macsec_context *ctx)
 		return ret;
 	}
 
-    ret = nss_macsec_secy_tx_sa_del(secy_id, channel, ctx->sa.assoc_num);
+	ret = nss_macsec_secy_tx_sa_del(secy_id, channel, ctx->sa.assoc_num);
 	if (ret){
 		osal_print("%s: fail to secy_tx_sa_del\n", __func__);
 		return ret;
@@ -633,19 +633,19 @@ static int nss_mdo_add_rxsc(struct macsec_context *ctx)
 	}
 
 	ret = nss_get_available_receive_sc(secy_id, &channel);
-	if (ret != ERROR_OK) {
+	if ((ret != ERROR_OK) || (channel >= NSS_SECY_SC_MAX_NUM)) {
 		osal_print("%s: no avaiable channel\n", __func__);
 		return ret;
 	}
 
-    ret = nss_set_rxsc(secy_id, channel, ctx->secy, ctx->rx_sc);
+	ret = nss_set_rxsc(secy_id, channel, ctx->secy, ctx->rx_sc);
 	if (ret == ERROR_OK) {
 		g_pdev_secy_cfg[secy_id]->secy_rxsc[channel].sw_secy = ctx->secy;
 		g_pdev_secy_cfg[secy_id]->secy_rxsc[channel].rx_sc = ctx->rx_sc;
 	} else {
 		osal_print("%s: fail to add rxsc\n", __func__);
 	}
-    return ret;
+	return ret;
 }
 
 static int nss_mdo_upd_rxsc(struct macsec_context *ctx)
@@ -694,7 +694,7 @@ static int nss_mdo_del_rxsc(struct macsec_context *ctx)
 	}
 
 	ret = nss_get_rxsc_idx_from_rxsc(secy_id, ctx->rx_sc, &channel);
-	if (ret != ERROR_OK) {
+	if ((ret != ERROR_OK) || (channel >= NSS_SECY_SC_MAX_NUM)) {
 		osal_print("%s: not found channel\n", __func__);
 		return ret;
 	}
@@ -740,7 +740,7 @@ static int nss_mdo_add_rxsa(struct macsec_context *ctx)
 		return ret;
 	}
 
-    memset(&rx_sak, 0, sizeof(fal_rx_sak_t));
+	memset(&rx_sak, 0, sizeof(fal_rx_sak_t));
 	rx_sak.sak_len = ctx->secy->key_len;
 	if (ctx->secy->key_len == NSS_GCM_AES_128_SAK_LEN) {
 		for (i = 0; i < 16; i++)
@@ -769,7 +769,7 @@ static int nss_mdo_add_rxsa(struct macsec_context *ctx)
 		osal_print("%s: fail to tx_sa_create \n", __func__);
 		return ret;
 	}
-    ret = nss_update_rxsa(secy_id, channel, ctx->sa.assoc_num, ctx->sa.rx_sa);
+	ret = nss_update_rxsa(secy_id, channel, ctx->sa.assoc_num, ctx->sa.rx_sa);
 	if (ret){
 		osal_print("%s: fail to nss_set_txsa \n", __func__);
 		return ret;
@@ -1048,7 +1048,7 @@ static const struct macsec_ops nss_macsec_mdo_ops = {
 int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev)
 {
 #if defined(NETIF_F_HW_MACSEC)
-	struct net_device *ndev = phydev->attached_dev;
+	struct net_device *ndev = NULL;
 #endif
 
 	if (dev_id >= FAL_SECY_ID_NUM_MAX) {
@@ -1072,6 +1072,7 @@ int nss_macsec_offload_init(u32 dev_id, struct phy_device *phydev)
 			}
 			phydev->macsec_ops = &nss_macsec_mdo_ops;
 #if defined(NETIF_F_HW_MACSEC)
+			ndev = phydev->attached_dev;
 			if(ndev)
 				ndev->features |= NETIF_F_HW_MACSEC;
 #endif

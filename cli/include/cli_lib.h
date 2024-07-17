@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, 2016, 2019 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -17,6 +19,12 @@
 
 #include <sys_base.h>
 #include "array.h"
+
+#ifdef USE_GLIB
+#include <glib.h>
+#define strlcpy g_strlcpy
+#define strlcat g_strlcat
+#endif
 
 #define CLI_MAC_STR_LEN_MAX     14	/* aaaa.bbbb.cccc */
 #define CLI_MAC_STR_LEN_MIN     5	/* 1.1.1 */

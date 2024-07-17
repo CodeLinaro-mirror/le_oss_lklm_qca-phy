@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -18,6 +20,8 @@
 
 #include <vty.h>
 #include <cli.h>
+#include "cli_lib.h"
+
 
 typedef struct {
 	sa_u32_t key;
@@ -359,7 +363,7 @@ void _vty_cmd_add_history(VTY_T *pVty)
 	if (pHist->list[pHist->insert] == NULL) {
 		return;
 	}
-	strcpy(pHist->list[pHist->insert], pBufTrim);
+	strlcpy(pHist->list[pHist->insert], pBufTrim, (osal_strlen(pBufTrim) + 1));
 
 	pHist->insert = (pHist->insert + 1) % VTY_HIST_MAX_SIZE;
 	pHist->cp = pHist->insert;
@@ -663,7 +667,7 @@ VTY_T *vty_create(int fd)
 	pVty->esc = VTY_ESC_NONE;
 	pVty->writeMode = VTY_MODE_FLUSH;
 	pVty->cliMode = CLI_MODE_ENABLE;
-	osal_strcpy(pVty->prompt, PROMPT_BASE ">");
+	strlcpy(pVty->prompt, PROMPT_BASE ">", sizeof(pVty->prompt));
 
 	pVty->line.data = osal_malloc(VTY_CMDBUF_MAX_SIZE);
 	if (pVty->line.data == NULL)
