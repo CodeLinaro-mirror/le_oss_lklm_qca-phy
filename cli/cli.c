@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2014, 2019 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -782,20 +784,20 @@ static int _cli_subcmd_type(CLI_SUBCMD_T *pSubCmd)
 		} else if (SUBCMD_TYPE_VAR_RANGE == type) {
 			osal_free(pSubCmd->key);
 			newKeyLen =
-			    sprintf(newKey, "<%u-%u>", pSubCmd->min,
-				    pSubCmd->max);
+			    snprintf(newKey, sizeof(newKey), "<%u-%u>",
+			    	     pSubCmd->min, pSubCmd->max);
 			pSubCmd->key = osal_malloc(newKeyLen + 1);
 			if (pSubCmd->key != NULL) {
-				strcpy(pSubCmd->key, newKey);
+				strlcpy(pSubCmd->key, newKey, newKeyLen + 1);
 			}
 		} else if (SUBCMD_TYPE_VAR_LIST == type) {
 			osal_free(pSubCmd->key);
 			newKeyLen =
-			    sprintf(newKey, "<%d...%d>", pSubCmd->min,
-				    pSubCmd->max);
+			    snprintf(newKey, sizeof(newKey), "<%d...%d>",
+			    	     pSubCmd->min, pSubCmd->max);
 			pSubCmd->key = osal_malloc(newKeyLen + 1);
 			if (pSubCmd->key != NULL) {
-				strcpy(pSubCmd->key, newKey);
+				strlcpy(pSubCmd->key, newKey, newKeyLen + 1);
 			}
 		}
 	} else if (_cli_is_key(key)) {
@@ -2422,8 +2424,8 @@ static int _cli_get_complete_str(ARRAY_T *pDescArray, char *completeStr)
 		lastKey = thisKey;
 	}
 
-	strcpy(completeStr, lastKey);
-	completeStr[commonCharCount] = '\0';
+	strlcpy(completeStr, lastKey, sizeof(completeStr));
+	/* completeStr[commonCharCount] = '\0'; */
 
 	return commonCharCount;
 }
