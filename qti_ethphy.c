@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023, 2025 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -633,12 +633,7 @@ static int qca808x_phy_read_status(struct phy_device *phydev)
 	if (ret < 0)
 		return ret;
 
-	if (phydev->link) {
-		if (phydev->speed == SPEED_2500)
-			phydev->interface = PHY_INTERFACE_MODE_2500BASEX;
-		else
-			phydev->interface = PHY_INTERFACE_MODE_SGMII;
-	} else {
+	if (!phydev->link) {
 		/* generate seed as a lower random value to make PHY linked as SLAVE
 		 * easily, except for master/slave configuration fault detected.
 		 * Be aware of the corner case where the link partner is also the
